@@ -1,10 +1,10 @@
 #include "../../../smartcont/mathlib.fc";
 
-forall X -> (tuple, ()) ~tset(tuple t, int idx, X val) asm(t val idx) "SETINDEXVAR";
+forall X -> (tuple, ()) ~tset(tuple t, int idx, X val) pure asm(t val idx) "SETINDEXVAR";
 
 ;; computes 1-acos(x)/Pi by a very simple, extremely slow (~70k gas) and imprecise method
 ;; fixed256 acos_prepare_slow(fixed255 x);
-int acos_prepare_slow_f255(int x) inline {
+int acos_prepare_slow_f255!(int x) inline {
   x -= (x == 0);
   int t = 1;
   repeat (255) {
@@ -16,14 +16,14 @@ int acos_prepare_slow_f255(int x) inline {
 
 ;; extremely slow (~70k gas) and somewhat imprecise (very imprecise when x is small), for testing only
 ;; fixed254 acos_slow(fixed255 x);
-int acos_slow_f255(int x) inline_ref {
-  int t = acos_prepare_slow_f255(x);
+int acos_slow_f255@(int x) inline_ref {
+  int t = acos_prepare_slow_f255!(x);
   return - mulrshiftr256(t + (-1 << 256), Pi_const_f254());
 }
 
 ;; fixed255 asin_slow(fixed255 x);
-int asin_slow_f255(int x) inline_ref {
-  int t = acos_prepare_slow_f255(abs(x)) % (1 << 255);
+int asin_slow_f255%(int x) inline_ref {
+  int t = acos_prepare_slow_f255!(abs(x)) % (1 << 255);
   return muldivr(t, Pi_const_f254(), 1 << 255) * sgn(x);
 }
 
@@ -116,13 +116,13 @@ int asin_f255_test(x) method_id(10023) {
     return asin_f255(x);
 }
 int asin_slow_f255_test(x) method_id(10024) {
-    return asin_slow_f255(x);
+    return asin_slow_f255%(x);
 }
 int acos_f255_test(x) method_id(10025) {
     return acos_f255(x);
 }
 int acos_slow_f255_test(x) method_id(10026) {
-    return acos_slow_f255(x);
+    return acos_slow_f255@(x);
 }
 int  fixed248::atan_test(x) method_id(10027) {
     return  fixed248::atan(x);
@@ -217,7 +217,7 @@ TESTCASE | 10000 |   -1-(-1<<256) -2-(-1<<256) | 1157920892373161954235709850086
 TESTCASE | 10000 |   -1-(-1<<256) 1<<255 | 81877371507464127617551201542979628307507432471243237061821853600756754782485
 TESTCASE | 10000 |   1 2 | 1
 TESTCASE | 10000 |   1 3 | 2
-TESTCASE | 10000 |   3<<254, 1<<254 | 50139445418395255283694704271811692336355250894665672355503583528635147053497
+TESTCASE | 10000 |   3<<254 1<<254 | 50139445418395255283694704271811692336355250894665672355503583528635147053497
 TESTCASE | 10000 |   3 5 | 4
 TESTCASE | 10001 |   115641670674223639132965820642403718536242645001775371762318060545014644837101-1 | 115792089237316195423570985008687907853269984665640564039457584007913129639935
 TESTCASE | 10001 |   15<<252 | 108679485937549714997960660780289583146059954551846264494610741505469565211201
